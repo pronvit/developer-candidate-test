@@ -1,90 +1,81 @@
 var express = require('express');
-var app = express();
-var Datastore = require('nedb'),
-  db = new Datastore({
-    filename: 'db.json',
-    autoload: true
-  });
+var bodyParser = require('body-parser');
+var bunyan = require('bunyan');
+var async = require('async');
+var Datastore = require('nedb');
+var DailyFileStream = require('./log-daily').DailyFileStream;
 var fs = require('fs');
-var handlebars = require('handlebars');
 
-app.get(['/everyone','/'], function (req, res) {
-  fs.readFile('everyone.hbs', 'utf8', (err, data) => {
-    var template = handlebars.compile(data);
-    db.find({}, {}, (err, docs) => {
-      var rendered = template({
-        people: docs
-      });
-      res.contentType('text/html');
-      res.status(200).send(rendered);
-    });
-  });
+var PORT    = process.env.PORT    || 3000;
+var LOGPATH = process.env.LOGPATH || './logs';
+
+var log = bunyan.createLogger({
+    src: false,
+    name: 'core',
+    level: 'debug',
 });
 
-app.get('/male', function (req, res) {
-  fs.readFile('everyone.hbs', 'utf8', (err, data) => {
-    var template = handlebars.compile(data);
-    db.find({
-      gender: 'male'
-    }, {}, (err, docs) => {
-      var rendered = template({
-        people: docs
-      });
-      res.contentType('text/html');
-      res.status(200).send(rendered);
-    });
-  });
-});
+log.addStream({ stream:new DailyFileStream({ path:LOGPATH }), level:'debug' });
 
-app.get('/female', function (req, res) {
-  fs.readFile('everyone.hbs', 'utf8', (err, data) => {
-    var template = handlebars.compile(data);
-    db.find({
-      gender: 'female'
-    }, {}, (err, docs) => {
-      var rendered = template({
-        people: docs
-      });
-      res.contentType('text/html');
-      res.status(200).send(rendered);
-    });
-  });
-});
+var app = express();
 
-app.get('/under30', function (req, res) {
-  fs.readFile('everyone.hbs', 'utf8', (err, data) => {
-    var template = handlebars.compile(data);
-    db.find({
-      age: {
-        $lt: 30
-      }
-    }, {}, (err, docs) => {
-      var rendered = template({
-        people: docs
-      });
-      res.contentType('text/html');
-      res.status(200).send(rendered);
-    });
-  });
-});
+var CT = {
+    app, log,
+    db: null,
 
-app.get('/over30', function (req, res) {
-  fs.readFile('everyone.hbs', 'utf8', (err, data) => {
-    var template = handlebars.compile(data);
-    db.find({
-      age: {
-        $gte: 30
-      }
-    }, {}, (err, docs) => {
-      var rendered = template({
-        people: docs
-      });
-      res.contentType('text/html');
-      res.status(200).send(rendered);
-    });
-  });
-});
+    devMode: process.argv.includes('--dev'),
+};
 
-app.listen(3000, function () {
-  console.log('Example app listening on port 3000!')
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(express.static('./static'));
+
+CT.fetchPeople = function(filters, cb) {
+    try {
+        var query = {};
+
+        CT.db.find(query, {}, function(err,docs) {
+            console.log(err,docs);
+            cb(err, docs)
+        });        
+    } catch (e) {
+        cb(e);
+    }
+};
+
+log.info('starting');
+
+async.series([
+    function(next) {
+        CT.db = new Datastore({ filename: 'db.json' });
+        CT.db.loadDatabase(function (err) {
+            next(err);
+        });
+    },
+
+    function(next) {
+        require('./api')(CT);
+        require('./web')(CT);
+        next();
+    },
+    
+    function(next) {
+        app.listen(PORT, function(err) {
+            if (err) {
+                next(err);
+                return;
+            }
+
+            log.info('listening on port', PORT);
+            next();
+        });
+    },
+
+], function(err) {
+    if (err) {
+        log.error(err);
+        process.exit(1);
+    }
+
+    log.info('startup done');
 });

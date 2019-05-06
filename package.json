@@ -4,7 +4,9 @@
   "description": "Refactoring exercise for Node",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "LOGPATH=./logs node ./index.js --dev | node node_modules/bunyan/bin/bunyan -o short -l debug",
+    "start-win": "node ./index.js --dev",
+    "start-prod": "LOGPATH=./logs node ./index.js"
   },
   "repository": {
     "type": "git",
@@ -13,8 +15,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "async": "^2.6.2",
+    "bunyan": "^1.8.12",
     "express": "^4.15.3",
+    "fs-extra": "^7.0.1",
     "handlebars": "^4.0.10",
-    "nedb": "^1.8.0"
+    "nedb": "^1.8.0",
+    "swig-templates": "^2.0.3"
   }
 }
