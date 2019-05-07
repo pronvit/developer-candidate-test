@@ -4,9 +4,10 @@
   "description": "Refactoring exercise for Node",
   "main": "index.js",
   "scripts": {
-    "start": "LOGPATH=./logs node ./index.js --dev | node node_modules/bunyan/bin/bunyan -o short -l debug",
+    "start": "LOGPATH=./logs node ./index.js --dev | node node_modules/.bin/bunyan -o short -l debug",
     "start-win": "node ./index.js --dev",
-    "start-prod": "LOGPATH=./logs node ./index.js"
+    "start-prod": "LOGPATH=./logs node ./index.js",
+    "build": "node node_modules/.bin/webpack --config webpack.config.js"
   },
   "repository": {
     "type": "git",
@@ -20,7 +21,22 @@
     "express": "^4.15.3",
     "fs-extra": "^7.0.1",
     "handlebars": "^4.0.10",
+    "jquery": "^3.4.1",
+    "morgan": "^1.9.1",
     "nedb": "^1.8.0",
-    "swig-templates": "^2.0.3"
+    "popper.js": "^1.15.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.4.4",
+    "@babel/preset-env": "^7.4.4",
+    "babel-loader": "^8.0.5",
+    "bootstrap": "^4.3.1",
+    "css-loader": "^2.1.1",
+    "eslint": "^5.16.0",
+    "eslint-loader": "^2.1.2",
+    "style-loader": "^0.23.1",
+    "webpack": "^4.30.0",
+    "webpack-cli": "^3.3.2",
+    "webpack-dev-middleware": "^3.6.2"
   }
 }

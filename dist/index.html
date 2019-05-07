@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="author" content="Vitaly Pronkin">
+
+        <title>People</title>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.9/vue.min.js"></script>   
+        
+        <style>
+            [v-cloak] {
+                display: none;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app" class="container" v-cloak>
+            <div v-if="error" class="alert alert-danger mb-0">[[error]]</div>
+
+            <div class="row py-2">
+                <div class="col-sm-12">
+                    <h3>People</h3>
+
+                    <div class="py-2">
+                        <form class="form-inline">
+                            <template v-for="(filter,i) in filters" class="col-sm-2">
+                                <template v-if="filter.type == 'single-select' || filter.type == 'range'">
+                                    <label class="mr-2" :class="{'ml-sm-4':i}"><b>[[filter.title]]</b></label>
+                                    <select class="form-control" v-model="filter.value">
+                                        <option v-for="(o,i) in filter.options" v-bind:value="o|fieldOrSelf('v')">[[o|fieldOrSelf('t')]]</option>
+                                    </select>
+                                </template>
+
+                                <template v-if="filter.type == 'minmax-input'">
+                                    <label class="mr-2" :class="{'ml-sm-4':i}"><b>[[filter.title]]</b></label>
+                                    <input class="form-control" type="number" v-model="filter.value[0]" style="width:70px;">
+                                    <label class="mr-2 ml-sm-2"><b>to</b></label>
+                                    <input class="form-control" type="number" size="4" v-model="filter.value[1]" style="width:70px;">
+                                </template>
+
+                                <template v-if="filter.type == 'minmax-select'">
+                                    <label class="mr-2" :class="{'ml-sm-4':i}"><b>[[filter.title]]</b></label>
+                                    <select class="form-control" v-model="filter.value[0]">
+                                        <option v-for="(o,i) in filter.options" v-bind:value="o|fieldOrSelf('v')">[[o|fieldOrSelf('t')]]</option>
+                                    </select>
+                                    <label class="mr-2 ml-sm-2"><b>to</b></label>
+                                    <select class="form-control" v-model="filter.value[1]">
+                                        <option v-for="(o,i) in filter.options" v-bind:value="o|fieldOrSelf('v')">[[o|fieldOrSelf('t')]]</option>
+                                    </select>
+                                </template>
+                            </template>
+
+                            <div class="dropdown" :class="{'ml-sm-4':filters.length}">
+                                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">New Filter</button>
+                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                    <a v-for="f in allFilters" class="dropdown-item" href="#" @click="addFilter(f)">[[f.longTitle || f.title]]</a>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-secondary ml-auto" type="button" @click="clearFilters()">Clear Filters</button>
+                        </form>
+                    </div>
+
+                    <div v-if="people.length">
+                        <table class="table table-sm">
+                            <tr class="thead-light">
+                                <th>Name</th>
+                                <th>Age</th>
+                            </tr>
+                            <tr v-for="person in people">
+                                <td>[[person.name]]</td>
+                                <td>[[person.age]]</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div v-if="!people.length">
+                        <p>No people found.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="vendors~main.bundle.js"></script>
+        <script src="main.bundle.js"></script>
+    </body>
+</html>

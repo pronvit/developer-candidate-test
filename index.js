@@ -1,81 +1,11 @@
-var express = require('express');
-var bodyParser = require('body-parser');
-var bunyan = require('bunyan');
-var async = require('async');
-var Datastore = require('nedb');
-var DailyFileStream = require('./log-daily').DailyFileStream;
-var fs = require('fs');
+// npm start - start in dev mode (may not work on Windows)
+// npm run start-win - start in dev mode (hopefully works on Windows)
+// npm run build - run webpack build
+// npm run start-prod - start in production mode
 
-var PORT    = process.env.PORT    || 3000;
-var LOGPATH = process.env.LOGPATH || './logs';
+// The code isn't quite a modern Javascript, but that's what I write in everyday life. There are
+// some features of ES6+ that I should to use more and some I don't care about as I'm happy with
+// the way it is. A lot of boilerplate code was taken from my other projects. As I'm not a React
+// developer, the frontend is implemented using Vue.js which I'm familiar with the most.
 
-var log = bunyan.createLogger({
-    src: false,
-    name: 'core',
-    level: 'debug',
-});
-
-log.addStream({ stream:new DailyFileStream({ path:LOGPATH }), level:'debug' });
-
-var app = express();
-
-var CT = {
-    app, log,
-    db: null,
-
-    devMode: process.argv.includes('--dev'),
-};
-
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use(express.static('./static'));
-
-CT.fetchPeople = function(filters, cb) {
-    try {
-        var query = {};
-
-        CT.db.find(query, {}, function(err,docs) {
-            console.log(err,docs);
-            cb(err, docs)
-        });        
-    } catch (e) {
-        cb(e);
-    }
-};
-
-log.info('starting');
-
-async.series([
-    function(next) {
-        CT.db = new Datastore({ filename: 'db.json' });
-        CT.db.loadDatabase(function (err) {
-            next(err);
-        });
-    },
-
-    function(next) {
-        require('./api')(CT);
-        require('./web')(CT);
-        next();
-    },
-    
-    function(next) {
-        app.listen(PORT, function(err) {
-            if (err) {
-                next(err);
-                return;
-            }
-
-            log.info('listening on port', PORT);
-            next();
-        });
-    },
-
-], function(err) {
-    if (err) {
-        log.error(err);
-        process.exit(1);
-    }
-
-    log.info('startup done');
-});
+require('./lib/main.js');
