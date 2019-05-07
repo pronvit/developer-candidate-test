@@ -25,12 +25,6 @@ module.exports = {
 							presets: ['@babel/preset-env'],
 						},
 					},
-					{
-						loader: 'eslint-loader',
-						options: {
-							configFile:'eslint.json',
-						},
-					},
 				],
 			},
   			{
